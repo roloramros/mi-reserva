@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiReserva - Iniciar Sesión</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="scripts/tailwind-config.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/theme.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md">
+    <!-- Logo/Brand -->
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600 text-white text-3xl mb-4 shadow-lg shadow-emerald-200">
+            <i class="fas fa-futbol"></i>
+        </div>
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight">MiReserva</h1>
+        <p class="text-slate-500 font-medium mt-1">Tu pasión, nuestra cancha.</p>
+    </div>
+
+    <!-- Login Card -->
+    <div class="bg-white rounded-3xl shadow-card border border-slate-100 p-8 md:p-10">
+        <h2 class="text-xl font-bold text-slate-800 mb-6 text-center">Bienvenido de nuevo</h2>
+        
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">Email o Usuario</label>
+                <div class="relative">
+                    <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="loginField" required
+                        class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all text-slate-700"
+                        placeholder="ejemplo@correo.com">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2 ml-1">Contraseña</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="password" id="loginPassword" required
+                        class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all text-slate-700"
+                        placeholder="••••••••">
+                </div>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all active:scale-[0.98] mt-4">
+                Iniciar Sesión
+            </button>
+        </form>
+
+        <div id="msg" class="mt-6 text-center text-sm font-medium hidden"></div>
+
+        <div class="mt-8 pt-6 border-t border-slate-50 text-center">
+            <p class="text-slate-500">¿No tienes cuenta? 
+                <a href="register.html" class="text-emerald-600 font-bold hover:underline">Regístrate gratis</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer link -->
+    <div class="mt-8 text-center">
+        <a href="/" class="text-slate-400 hover:text-slate-600 text-xs font-bold uppercase tracking-widest transition">
+            <i class="fas fa-arrow-left mr-1"></i> Volver al inicio
+        </a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loginField = document.getElementById("loginField").value;
+      const password = document.getElementById("loginPassword").value;
+      const msgDiv = document.getElementById("msg");
+
+      msgDiv.className = "mt-6 text-center text-sm font-medium p-3 rounded-lg bg-slate-100 text-slate-600";
+      msgDiv.innerText = "Verificando credenciales...";
+      msgDiv.classList.remove("hidden");
+
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ loginField, password })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          msgDiv.innerText = data.error;
+          msgDiv.className = "mt-6 text-center text-sm font-medium p-3 rounded-lg bg-red-50 text-red-600";
+        } else {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('role', data.role);
+
+          msgDiv.innerText = "¡Bienvenido! Redirigiendo...";
+          msgDiv.className = "mt-6 text-center text-sm font-medium p-3 rounded-lg bg-emerald-50 text-emerald-600";
+
+          setTimeout(() => {
+            if (data.role === "player") {
+              window.location.href = "playerHome.html";
+            } else if (data.role === "owner") {
+              window.location.href = "ownerHome.html";
+            }
+          }, 800);
+        }
+      } catch (error) {
+        msgDiv.innerText = "Error de conexión con el servidor";
+        msgDiv.className = "mt-6 text-center text-sm font-medium p-3 rounded-lg bg-red-50 text-red-600";
+      }
+    });
+  </script>
+</body>
+</html>

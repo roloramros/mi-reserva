@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiReserva - Detalle de Cancha</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/scripts/tailwind-config.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles/theme.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div id="loadingState" class="flex flex-col items-center justify-center py-20">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+      <p class="text-slate-500 font-bold uppercase tracking-widest text-xs">Cargando detalles...</p>
+    </div>
+
+    <div id="content" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Left Column: Field Info -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-3xl shadow-card border border-slate-100 overflow-hidden sticky top-24 transition-all">
+          <div class="h-64 bg-slate-100 relative flex items-center justify-center text-slate-300 text-7xl">
+            <i id="fieldIcon" class="fas fa-futbol"></i>
+            <div id="fieldTypeBadge" class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-1 rounded-full text-[10px] font-black text-emerald-600 shadow-sm uppercase tracking-widest">
+              Cancha
+            </div>
+          </div>
+          <div class="p-8">
+            <h1 id="fieldName" class="text-3xl font-black text-slate-900 mb-2 leading-tight">Nombre</h1>
+            <div class="flex items-center text-slate-500 mb-6 text-xs font-bold">
+              <i class="fas fa-location-dot mr-2 text-emerald-500"></i>
+              <span id="fieldAddress">Ubicación</span>
+            </div>
+            
+            <div class="flex items-center justify-between py-6 border-y border-slate-50 mb-8">
+              <div>
+                <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest block mb-1">Precio por hora</span>
+                <span class="text-3xl font-black text-slate-900">$<span id="fieldPrice">0</span></span>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest block mb-1">Contacto</span>
+                <span id="fieldPhone" class="font-bold text-slate-700">N/A</span>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Descripción</h3>
+              <p id="fieldDescription" class="text-slate-600 leading-relaxed text-sm font-medium">
+                No hay descripción disponible.
+              </p>
+            </div>
+
+            <a id="mapLink" href="#" target="_blank" class="flex items-center justify-center w-full py-4 bg-emerald-50 text-emerald-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-100 transition shadow-sm active:scale-95">
+              <i class="fas fa-map-marked-alt mr-2"></i> Ver en Google Maps
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Booking -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-3xl shadow-card border border-slate-100 p-8 md:p-10">
+          <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+            <div>
+              <h2 class="text-2xl font-black text-slate-900 leading-tight">Reserva tu horario</h2>
+              <p class="text-slate-500 font-medium">Selecciona el día y la hora para jugar.</p>
+            </div>
+            <div class="relative min-w-[200px]">
+              <i class="fas fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500"></i>
+              <input type="date" id="datePicker" 
+                class="bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-4 text-slate-700 font-bold focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none w-full transition-all shadow-sm">
+            </div>
+          </div>
+
+          <div id="selectionHeader" class="hidden flex items-center justify-between mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm">
+            <span class="text-emerald-700 font-bold text-xs flex items-center gap-2 uppercase tracking-widest">
+                <i class="fas fa-info-circle"></i> Selecciona fin del turno
+            </span>
+            <button onclick="resetSelection()" class="text-[9px] uppercase tracking-widest bg-white text-emerald-600 px-4 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-50 transition font-black">
+              Cancelar
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4" id="timeGrid">
+            <!-- Slots -->
+          </div>
+
+          <div class="mt-10 pt-10 border-t border-slate-50 flex flex-wrap items-center gap-8 text-[9px] font-black uppercase tracking-widest text-slate-400">
+            <div class="flex items-center gap-2"><span class="w-4 h-4 bg-white border border-slate-200 rounded-lg"></span> Disponible</div>
+            <div class="flex items-center gap-2"><span class="w-4 h-4 bg-slate-100 rounded-lg"></span> Ocupado</div>
+            <div class="flex items-center gap-2"><span class="w-4 h-4 bg-emerald-500 rounded-lg"></span> Selección</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="/scripts/ui-components.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const fieldId = urlParams.get('id');
+    const token = localStorage.getItem('token');
+    let currentField = null;
+    let reservations = [];
+    let selectionStart = null;
+    let selectionEnd = null;
+
+    async function init() {
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (!fieldId) {
+        Swal.fire('Error', 'No se especificó una cancha', 'error').then(() => {
+          window.location.href = 'playerHome.html';
+        });
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const datePicker = document.getElementById('datePicker');
+      datePicker.value = today;
+      datePicker.min = today;
+
+      await fetchFieldDetails();
+      await fetchAvailability();
+
+      datePicker.addEventListener('change', fetchAvailability);
+    }
+
+    async function fetchFieldDetails() {
+      try {
+        const response = await fetch(`/player/field/${fieldId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Cancha no encontrada');
+        const data = await response.json();
+        currentField = data.field;
+        renderFieldInfo();
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo cargar la información', 'error');
+      }
+    }
+
+    async function fetchAvailability() {
+      const date = document.getElementById('datePicker').value;
+      const grid = document.getElementById('timeGrid');
+      grid.innerHTML = '<div class="col-span-full text-center py-10"><div class="animate-spin h-8 w-8 border-2 border-emerald-500 border-b-transparent rounded-full mx-auto"></div></div>';
+
+      try {
+        const response = await fetch(`/player/field/${fieldId}/availability?date=${date}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        reservations = data.reservations;
+        renderTimeGrid();
+      } catch (error) {
+        grid.innerHTML = '<div class="col-span-full text-center text-red-500 py-4 font-bold">Error al cargar disponibilidad</div>';
+      }
+    }
+
+    function renderFieldInfo() {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+
+      document.getElementById('fieldName').textContent = currentField.name;
+      document.getElementById('fieldTypeBadge').textContent = currentField.type;
+      document.getElementById('fieldAddress').textContent = currentField.address || 'Sin dirección';
+      document.getElementById('fieldPrice').textContent = currentField.price_per_hour;
+      document.getElementById('fieldPhone').textContent = currentField.contact_phone || 'N/A';
+      document.getElementById('fieldDescription').textContent = currentField.description || 'Sin descripción.';
+
+      if (currentField.latitude && currentField.longitude) {
+        document.getElementById('mapLink').href = `https://www.google.com/maps/search/?api=1&query=${currentField.latitude},${currentField.longitude}`;
+      } else {
+        document.getElementById('mapLink').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentField.address)}`;
+      }
+
+      let icon = 'fa-futbol';
+      const type = currentField.type.toLowerCase();
+      if (type.includes('pádel') || type.includes('padel')) icon = 'fa-table-tennis-paddle-ball';
+      if (type.includes('tenis')) icon = 'fa-baseball-bat-ball';
+      document.getElementById('fieldIcon').className = `fas ${icon}`;
+    }
+
+    function renderTimeGrid() {
+      const grid = document.getElementById('timeGrid');
+      grid.innerHTML = '';
+      const date = document.getElementById('datePicker').value;
+      const now = new Date();
+      const isToday = date === now.toISOString().split('T')[0];
+      const currentHour = now.getHours();
+
+      const header = document.getElementById('selectionHeader');
+      if (selectionStart !== null) header.classList.remove('hidden');
+      else header.classList.add('hidden');
+
+      for (let h = 8; h <= 23; h++) {
+        const hourStr = h.toString().padStart(2, '0');
+        const isPast = isToday && h <= currentHour;
+        const isOccupied = reservations.some(res => {
+          const resStart = new Date(res.start_time).getHours();
+          const resEnd = new Date(res.end_time).getHours();
+          return h >= resStart && h < resEnd;
+        });
+
+        const slot = document.createElement('div');
+        slot.className = 'border-2 rounded-2xl p-4 text-center transition-all duration-300 relative overflow-hidden flex flex-col items-center justify-center';
+        slot.dataset.hour = h;
+        
+        const displayTime = `${hourStr}:00`;
+
+        if (isOccupied) {
+          slot.className += ' bg-slate-100 border-slate-100 text-slate-400 cursor-not-allowed opacity-60';
+          slot.innerHTML = `<span class="text-sm font-black mb-1">${displayTime}</span><span class="text-[8px] font-black uppercase tracking-tighter">Ocupado</span>`;
+        } else if (isPast) {
+          slot.className += ' bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed';
+          slot.innerHTML = `<span class="text-sm font-black mb-1">${displayTime}</span><span class="text-[8px] font-black uppercase tracking-tighter">Pasado</span>`;
+        } else {
+          slot.className += ' bg-white border-slate-100 text-slate-700 cursor-pointer hover:border-emerald-500 hover:shadow-lg shadow-sm';
+          
+          if (selectionStart !== null && h === selectionStart) {
+            slot.className = slot.className.replace('bg-white border-slate-100 text-slate-700', 'bg-emerald-600 border-emerald-600 text-white shadow-emerald-100');
+            slot.innerHTML = `<span class="text-sm font-black mb-1">${displayTime}</span><span class="text-[8px] font-black uppercase tracking-tighter">Desde</span>`;
+          } else {
+            slot.innerHTML = `<span class="text-sm font-black mb-1">${displayTime}</span><span class="text-[8px] font-black text-emerald-500 uppercase tracking-tighter">Libre</span>`;
+          }
+
+          slot.onclick = () => handleSlotClick(h);
+          slot.onmouseenter = () => handleSlotHover(h);
+        }
+        grid.appendChild(slot);
+      }
+    }
+
+    function handleSlotClick(hour) {
+      if (selectionStart === null) {
+        selectionStart = hour;
+        renderTimeGrid();
+      } else {
+        // Si hace clic en una hora anterior, reiniciamos el inicio
+        if (hour < selectionStart) {
+          selectionStart = hour;
+          selectionEnd = null;
+          renderTimeGrid();
+          return;
+        }
+
+        // Si hace clic en la misma hora o una posterior, validamos el rango
+        if (isRangeValid(selectionStart, hour)) {
+          selectionEnd = hour + 1;
+          confirmBooking(document.getElementById('datePicker').value, selectionStart, selectionEnd);
+        } else {
+          Swal.fire('Error', 'El rango seleccionado contiene horarios ocupados', 'warning');
+          resetSelection();
+        }
+      }
+    }
+
+    function handleSlotHover(hour) {
+      if (selectionStart === null || selectionEnd !== null) return;
+      const slots = document.querySelectorAll('#timeGrid > div');
+      const isValid = isRangeValid(selectionStart, hour);
+
+      slots.forEach(slot => {
+        const h = parseInt(slot.dataset.hour);
+        if (isNaN(h)) return;
+        
+        slot.classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-red-50', 'border-red-200', 'ring-2', 'ring-emerald-400');
+        
+        // Resaltar el rango entre el inicio y el actual
+        if (h > selectionStart && h <= hour) {
+          if (!isValid) slot.classList.add('bg-red-50', 'border-red-200');
+          else slot.classList.add('bg-emerald-50', 'border-emerald-200');
+        }
+        
+        // Feedback especial si está sobre la misma hora de inicio (Reserva de 1 hora)
+        if (h === selectionStart && h === hour) {
+            slot.classList.add('ring-2', 'ring-emerald-400');
+        }
+      });
+    }
+
+    function isRangeValid(start, end) {
+      for (let h = start; h <= end; h++) {
+        if (reservations.some(res => {
+          const resStart = new Date(res.start_time).getHours();
+          const resEnd = new Date(res.end_time).getHours();
+          return h >= resStart && h < resEnd;
+        })) return false;
+      }
+      return true;
+    }
+
+    function resetSelection() {
+      selectionStart = null;
+      selectionEnd = null;
+      renderTimeGrid();
+    }
+
+    function confirmBooking(date, startHour, endHour) {
+      const totalHours = endHour - startHour;
+      const totalPrice = currentField.price_per_hour * totalHours;
+
+      Swal.fire({
+        title: 'Confirmar Reserva',
+        html: `
+          <div class="text-left bg-slate-50 p-6 rounded-2xl border border-slate-100">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Resumen</p>
+            <p class="text-slate-800 font-bold mb-1">${currentField.name}</p>
+            <p class="text-slate-600 text-sm mb-4">${date} @ ${startHour}:00 - ${endHour}:00</p>
+            <div class="flex justify-between items-center pt-4 border-t border-slate-200">
+                <span class="text-slate-500 font-bold text-xs uppercase">Total:</span>
+                <span class="text-2xl font-black text-emerald-600">$${totalPrice}</span>
+            </div>
+          </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '¡Reservar!',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#10b981',
+        cancelButtonColor: '#94a3b8',
+        customClass: { popup: 'rounded-3xl', confirmButton: 'rounded-xl px-8', cancelButton: 'rounded-xl px-8' }
+      }).then((result) => {
+        if (result.isConfirmed) {
+            const start = `${date} ${startHour.toString().padStart(2, '0')}:00:00`;
+            const end = `${date} ${endHour.toString().padStart(2, '0')}:00:00`;
+            executeBooking(start, end);
+        } else resetSelection();
+      });
+    }
+
+    async function executeBooking(start, end) {
+      try {
+        const response = await fetch('/player/reserve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ field_id: fieldId, start_time: start, end_time: end })
+        });
+        if (response.ok) {
+          Swal.fire({ title: '¡Reserva Creada!', text: 'Goooool! Tu reserva está lista.', icon: 'success' }).then(() => {
+            resetSelection();
+            fetchAvailability();
+          });
+        } else throw new Error('Error al procesar reserva');
+      } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+        resetSelection();
+      }
+    }
+    window.onload = init;
+  </script>
+</body>
+</html>

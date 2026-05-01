@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MiReserva Player - Descubrir Canchas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/scripts/tailwind-config.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="/styles/theme.css">
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Search & Filter Section -->
+    <section class="mb-10">
+      <div class="max-w-2xl mx-auto text-center mb-8">
+        <h1 class="text-3xl font-extrabold text-slate-900 sm:text-4xl mb-4 tracking-tight">Encuentra tu próximo partido</h1>
+        <p class="text-lg text-slate-600 font-medium">Reserva las mejores canchas de tu ciudad en segundos.</p>
+      </div>
+
+      <div class="max-w-3xl mx-auto bg-white p-2 rounded-2xl shadow-card border border-slate-200 flex flex-col md:flex-row gap-2">
+        <div class="flex-grow relative">
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="searchInput" placeholder="Buscar por nombre o ubicación..." 
+            class="w-full pl-12 pr-4 py-3 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-slate-700 outline-none">
+        </div>
+        <div class="flex items-center px-6 border-l border-slate-100 hidden md:flex">
+            <i class="fas fa-filter text-slate-400 mr-2"></i>
+            <span class="text-slate-500 font-bold text-xs uppercase tracking-widest">Filtros</span>
+        </div>
+      </div>
+
+      <!-- Categories -->
+      <div class="flex flex-wrap justify-center gap-2 mt-6" id="categoryFilters">
+        <button class="cat-btn active px-6 py-2 rounded-full bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest transition shadow-sm" data-category="all">Todos</button>
+        <button class="cat-btn px-6 py-2 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition" data-category="fútbol 5">Fútbol 5</button>
+        <button class="cat-btn px-6 py-2 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition" data-category="fútbol 7">Fútbol 7</button>
+        <button class="cat-btn px-6 py-2 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition" data-category="fútbol 11">Fútbol 11</button>
+        <button class="cat-btn px-6 py-2 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition" data-category="pádel">Pádel</button>
+        <button class="cat-btn px-6 py-2 rounded-full bg-white border border-slate-200 text-slate-600 hover:border-emerald-500 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition" data-category="tenis">Tenis</button>
+      </div>
+    </section>
+
+    <!-- Field Grid -->
+    <section>
+      <div id="loadingState" class="flex flex-col items-center justify-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+        <p class="text-slate-500 font-bold uppercase tracking-widest text-xs">Cargando canchas increíbles...</p>
+      </div>
+
+      <div id="noResults" class="hidden flex flex-col items-center justify-center py-20">
+        <i class="fas fa-search-minus text-5xl text-slate-200 mb-4"></i>
+        <h3 class="text-xl font-black text-slate-700">No encontramos resultados</h3>
+        <p class="text-slate-500 font-medium">Prueba ajustando tus filtros de búsqueda.</p>
+        <button onclick="resetFilters()" class="mt-4 text-emerald-600 font-black hover:underline uppercase tracking-widest text-xs">Ver todas las canchas</button>
+      </div>
+
+      <div id="fieldGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Cards will be injected here -->
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="/scripts/ui-components.js"></script>
+  <script>
+    let allFields = [];
+    let currentCategory = 'all';
+
+    function checkAuth() {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      if (!token) {
+        window.location.href = "login.html";
+        return false;
+      }
+      if (role !== "player") {
+        window.location.href = "ownerHome.html";
+        return false;
+      }
+      return true;
+    }
+
+    async function fetchFields() {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch("/player/fields", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.fields) {
+          allFields = data.fields;
+          renderFields(allFields);
+        }
+      } catch (err) {
+        console.error("Error al cargar canchas:", err);
+      } finally {
+        document.getElementById("loadingState").classList.add("hidden");
+      }
+    }
+
+    function renderFields(fields) {
+      const grid = document.getElementById("fieldGrid");
+      const noResults = document.getElementById("noResults");
+      grid.innerHTML = "";
+
+      if (fields.length === 0) {
+        noResults.classList.remove("hidden");
+        return;
+      }
+
+      noResults.classList.add("hidden");
+
+      fields.forEach(field => {
+        const card = `
+          <div onclick="viewDetail('${field.id}')" class="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-card hover:shadow-card-hover transition-all duration-300 group cursor-pointer">
+            <div class="h-48 bg-slate-100 relative overflow-hidden">
+                <img src="icono.png" class="w-full h-full object-cover opacity-20 group-hover:scale-110 transition duration-500" alt="${field.name}">
+                <div class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-emerald-600 font-black text-sm shadow-sm">
+                    $${field.price_per_hour}/hr
+                </div>
+                <div class="absolute bottom-4 left-4 bg-emerald-600 text-white px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest">
+                    ${field.type}
+                </div>
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-black text-slate-800 mb-2 group-hover:text-emerald-600 transition">${field.name}</h3>
+              <p class="text-slate-500 text-xs font-bold mb-4 line-clamp-1 leading-relaxed">
+                <i class="fas fa-map-marker-alt text-emerald-500 mr-1"></i> ${field.address}
+              </p>
+              <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div class="flex items-center gap-1 text-amber-500">
+                    <i class="fas fa-star text-[10px]"></i>
+                    <span class="text-slate-700 font-black text-xs">4.8</span>
+                </div>
+                <button class="bg-emerald-600 group-hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-sm active:scale-95">
+                  Reservar
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        grid.innerHTML += card;
+      });
+    }
+
+    function viewDetail(id) {
+      window.location.href = `fieldDetail.html?id=${id}`;
+    }
+
+    // Filters
+    document.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => {
+            b.classList.remove('bg-emerald-600', 'text-white', 'shadow-sm', 'active');
+            b.classList.add('bg-white', 'text-slate-600', 'border');
+        });
+        btn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm', 'active');
+        btn.classList.remove('bg-white', 'text-slate-600', 'border');
+        
+        currentCategory = btn.dataset.category;
+        filterFields();
+      });
+    });
+
+    document.getElementById("searchInput").addEventListener("input", filterFields);
+
+    function filterFields() {
+      const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allFields.filter(field => {
+        const matchesSearch = field.name.toLowerCase().includes(searchTerm) || 
+                              field.address.toLowerCase().includes(searchTerm);
+        const matchesCategory = currentCategory === 'all' || field.type.toLowerCase() === currentCategory;
+        return matchesSearch && matchesCategory;
+      });
+      renderFields(filtered);
+    }
+
+    function resetFilters() {
+        document.getElementById("searchInput").value = "";
+        document.querySelector('[data-category="all"]').click();
+    }
+
+    window.onload = () => {
+      if (checkAuth()) {
+        fetchFields();
+      }
+    };
+  </script>
+</body>
+</html>

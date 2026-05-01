@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservas - MiReserva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/scripts/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+    
+    <div id="header-placeholder"></div>
+
+    <main class="max-w-4xl mx-auto px-4 py-10">
+        <div class="flex items-center justify-between mb-10">
+            <h1 class="text-3xl font-black text-slate-900 tracking-tight">Mis Reservas</h1>
+            <div class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                <i class="fas fa-ticket-alt"></i> Historial de Juegos
+            </div>
+        </div>
+
+        <section id="upcomingSection" class="mb-14">
+            <h2 class="text-xl font-black text-slate-800 mb-6 flex items-center uppercase tracking-widest text-xs">
+                <span class="w-2 h-4 bg-emerald-500 rounded-full mr-3"></span>
+                Próximos Juegos
+            </h2>
+            <div id="upcomingList" class="space-y-4">
+                <div class="animate-pulse bg-white h-24 w-full rounded-2xl border border-slate-100"></div>
+            </div>
+        </section>
+
+        <section id="historySection">
+            <h2 class="text-xl font-black text-slate-800 mb-6 flex items-center uppercase tracking-widest text-xs">
+                <span class="w-2 h-4 bg-slate-300 rounded-full mr-3"></span>
+                Historial Pasado
+            </h2>
+            <div id="historyList" class="space-y-4">
+                <!-- History reservations loaded via JS -->
+            </div>
+        </section>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="/scripts/ui-components.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            fetchReservations();
+        });
+
+        async function fetchReservations() {
+            try {
+                const response = await fetch('/player/reservations', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!response.ok) throw new Error('No se pudieron obtener las reservas');
+
+                const data = await response.json();
+                renderReservations(data);
+            } catch (error) {
+                Swal.fire('Error', 'No pudimos cargar tus reservas.', 'error');
+            }
+        }
+
+        function renderReservations(data) {
+            const reservations = data.reservations || [];
+            const upcomingList = document.getElementById('upcomingList');
+            const historyList = document.getElementById('historyList');
+            
+            upcomingList.innerHTML = '';
+            historyList.innerHTML = '';
+
+            const now = new Date();
+
+            const upcoming = reservations.filter(r => new Date(r.start_time) >= now && r.status !== 'cancelada')
+                .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+            
+            const history = reservations.filter(r => new Date(r.start_time) < now || r.status === 'cancelada')
+                .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+
+            if (upcoming.length === 0) {
+                upcomingList.innerHTML = `
+                    <div class="bg-white p-8 rounded-2xl border border-dashed border-slate-300 text-center">
+                        <i class="fas fa-calendar-plus text-slate-200 text-4xl mb-4"></i>
+                        <p class="text-slate-400 font-bold italic text-sm">No tienes juegos programados.</p>
+                        <a href="playerHome.html" class="mt-4 inline-block text-emerald-600 font-black uppercase tracking-widest text-[10px] hover:underline">¡Reserva una cancha ahora!</a>
+                    </div>
+                `;
+            } else {
+                upcoming.forEach(res => upcomingList.appendChild(createTicket(res, true)));
+            }
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="text-slate-400 font-bold italic text-sm py-4 text-center">Tu historial está vacío.</p>';
+            } else {
+                history.forEach(res => historyList.appendChild(createTicket(res, false)));
+            }
+        }
+
+        function createTicket(res, isUpcoming) {
+            const div = document.createElement('div');
+            div.className = 'bg-white rounded-3xl shadow-card border border-slate-100 flex overflow-hidden hover:shadow-card-hover transition-all duration-300 group';
+            
+            const startTime = new Date(res.start_time);
+            const endTime = new Date(res.end_time);
+            const dateStr = startTime.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+            const timeStr = `${startTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+            
+            let iconClass = 'fa-futbol';
+            const type = res.field_type.toLowerCase();
+            if (type.includes('pádel') || type.includes('padel')) iconClass = 'fa-table-tennis-paddle-ball';
+            else if (type.includes('tenis')) iconClass = 'fa-baseball-bat-ball';
+
+            let statusBadge = '';
+            if (res.status === 'pendiente') statusBadge = '<span class="px-3 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 uppercase tracking-widest">Pendiente</span>';
+            else if (res.status === 'confirmada') statusBadge = '<span class="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 uppercase tracking-widest">Confirmada</span>';
+            else if (res.status === 'cancelada') statusBadge = '<span class="px-3 py-1 rounded-full text-[10px] font-black bg-red-50 text-red-600 uppercase tracking-widest">Cancelada</span>';
+
+            const canCancel = isUpcoming && (startTime - new Date() > 2 * 60 * 60 * 1000) && res.status !== 'cancelada';
+
+            div.innerHTML = `
+                <div class="w-24 bg-slate-50 flex flex-col items-center justify-center text-emerald-500 text-3xl shrink-0 border-r border-slate-100">
+                    <i class="fas ${iconClass}"></i>
+                    <span class="text-[9px] font-black text-slate-400 mt-2 uppercase tracking-tighter">${res.field_type.split(' ')[0]}</span>
+                </div>
+                <div class="p-6 flex-grow flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div class="space-y-1">
+                        <h3 class="font-black text-xl text-slate-900 group-hover:text-emerald-600 transition">${res.field_name}</h3>
+                        <div class="flex flex-col gap-1">
+                            <p class="text-slate-500 capitalize text-xs font-bold flex items-center gap-2">
+                                <i class="far fa-calendar-alt text-emerald-500 w-4"></i> ${dateStr}
+                            </p>
+                            <p class="text-slate-400 text-xs font-bold flex items-center gap-2">
+                                <i class="far fa-clock text-emerald-500 w-4"></i> ${timeStr}
+                            </p>
+                        </div>
+                        <div class="pt-3 flex items-center space-x-3">
+                            ${statusBadge}
+                            <span class="text-sm font-black text-slate-800 tracking-tight">$${parseFloat(res.total_price).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end shrink-0">
+                        ${canCancel ? `
+                            <button onclick="cancelReservation('${res.id}')" 
+                                class="text-red-500 hover:text-white hover:bg-red-500 font-black text-[10px] uppercase tracking-widest transition-all flex items-center px-5 py-3 rounded-2xl border border-red-50 active:scale-95 shadow-sm">
+                                <i class="fas fa-times-circle mr-2"></i> Cancelar
+                            </button>
+                        ` : (res.status !== 'cancelada' && !isUpcoming ? `
+                            <button onclick="rebook('${res.field_id}')" 
+                                class="text-emerald-600 hover:text-white hover:bg-emerald-600 font-black text-[10px] uppercase tracking-widest transition-all flex items-center px-5 py-3 rounded-2xl border border-emerald-50 active:scale-95 shadow-sm">
+                                <i class="fas fa-redo mr-2"></i> Reservar de nuevo
+                            </button>
+                        ` : '')}
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function rebook(fieldId) {
+            window.location.href = `fieldDetail.html?id=${fieldId}`;
+        }
+
+        async function cancelReservation(id) {
+            const result = await Swal.fire({
+                title: '¿Cancelar reserva?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No, volver',
+                reverseButtons: true,
+                customClass: { popup: 'rounded-3xl', confirmButton: 'rounded-xl px-6 py-3', cancelButton: 'rounded-xl px-6 py-3' }
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch('/player/cancel-reservation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: JSON.stringify({ reservationId: id })
+                    });
+                    if (response.ok) {
+                        Swal.fire({ title: 'Cancelada', text: 'Reserva eliminada.', icon: 'success', timer: 2000, showConfirmButton: false });
+                        fetchReservations();
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error || 'No se pudo cancelar');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

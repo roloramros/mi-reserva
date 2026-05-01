@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SportField Manager - Panel de Dueño</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="scripts/tailwind-config.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/theme.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <div id="header-placeholder"></div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+      <h1 class="text-3xl font-extrabold text-slate-900">Gestión de Reservaciones</h1>
+      
+      <!-- Filtros rápidos -->
+      <div class="flex flex-wrap gap-2 bg-white p-1 rounded-2xl shadow-sm border border-slate-100">
+        <button class="filter-btn active px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-sm transition" data-filter="all">Todas</button>
+        <button class="filter-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-bold text-sm transition" data-filter="pendiente">Pendientes</button>
+        <button class="filter-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-bold text-sm transition" data-filter="confirmada">Confirmadas</button>
+        <button class="filter-btn px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-50 font-bold text-sm transition" data-filter="cancelada">Canceladas</button>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="mb-8 relative max-w-md">
+      <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      <input type="text" id="searchInput" placeholder="Buscar por cliente o cancha..." 
+        class="w-full pl-12 pr-4 py-3 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none shadow-sm transition-all">
+    </div>
+
+    <!-- Contenido de Reservaciones -->
+    <div id="reservations-content" class="min-h-[400px]">
+      <div class="flex flex-col items-center justify-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
+        <p class="text-slate-500 font-medium">Cargando reservaciones...</p>
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="scripts/ui-components.js"></script>
+  <script>
+    let allReservations = [];
+    let currentFilter = 'all';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadReservations();
+      setupFilters();
+    });
+
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      if (!token || role !== 'owner') {
+        window.location.href = 'login.html';
+      }
+    }
+
+    async function loadReservations() {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/owner/reservations', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Error de red');
+        const data = await response.json();
+        allReservations = data.reservations;
+        renderReservations();
+      } catch (err) {
+        document.getElementById('reservations-content').innerHTML = `
+          <div class="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl text-center">
+            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+            <p class="font-bold">Error al cargar datos</p>
+            <button onclick="loadReservations()" class="mt-4 text-sm underline hover:no-underline">Reintentar</button>
+          </div>
+        `;
+      }
+    }
+
+    function setupFilters() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('bg-emerald-600', 'text-white');
+            b.classList.add('text-slate-600', 'hover:bg-slate-50');
+          });
+          btn.classList.add('bg-emerald-600', 'text-white');
+          btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+          currentFilter = btn.dataset.filter;
+          renderReservations();
+        });
+      });
+
+      document.getElementById('searchInput').addEventListener('input', renderReservations);
+    }
+
+    function renderReservations() {
+      const container = document.getElementById('reservations-content');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      
+      const filtered = allReservations.filter(res => {
+        const matchesStatus = currentFilter === 'all' || res.status === currentFilter;
+        const matchesSearch = res.username.toLowerCase().includes(search) || res.field_name.toLowerCase().includes(search);
+        return matchesStatus && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-20 rounded-3xl border border-dashed border-slate-300 text-center">
+            <i class="fas fa-calendar-times text-slate-300 text-5xl mb-4"></i>
+            <p class="text-slate-500 font-medium italic">No se encontraron reservaciones con estos criterios.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const tableHtml = `
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-card overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                  <th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Cancha</th>
+                  <th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Cliente</th>
+                  <th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Fecha y Hora</th>
+                  <th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Estado</th>
+                  <th class="px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-50">
+                ${filtered.map(res => {
+                  const start = new Date(res.start_time);
+                  const end = new Date(res.end_time);
+                  return `
+                    <tr class="hover:bg-slate-50/50 transition">
+                      <td class="px-6 py-4">
+                        <span class="font-bold text-slate-800">${res.field_name}</span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                          <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">
+                            ${res.username.charAt(0).toUpperCase()}
+                          </div>
+                          <span class="text-slate-700 font-medium">${res.username}</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <div class="text-sm">
+                          <p class="font-bold text-slate-800">${start.toLocaleDateString()}</p>
+                          <p class="text-slate-500">${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} - ${end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
+                          res.status === 'confirmada' ? 'bg-emerald-100 text-emerald-700' :
+                          res.status === 'pendiente' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                        }">
+                          ${res.status}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                          ${res.status === 'pendiente' ? `
+                            <button onclick="updateStatus(${res.reservation_id}, 'confirm')" class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition flex items-center justify-center shadow-sm">
+                              <i class="fas fa-check text-xs"></i>
+                            </button>
+                          ` : ''}
+                          ${res.status !== 'cancelada' ? `
+                            <button onclick="updateStatus(${res.reservation_id}, 'cancel')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition flex items-center justify-center shadow-sm">
+                              <i class="fas fa-times text-xs"></i>
+                            </button>
+                          ` : ''}
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      container.innerHTML = tableHtml;
+    }
+
+    async function updateStatus(id, action) {
+      const type = action === 'confirm' ? 'confirmar' : 'cancelar';
+      const color = action === 'confirm' ? '#10b981' : '#ef4444';
+
+      const result = await Swal.fire({
+        title: `¿${type.charAt(0).toUpperCase() + type.slice(1)} reservación?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: color,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'No, volver'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`/owner/${action}-reservation`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ reservationId: id })
+          });
+
+          if (response.ok) {
+            Swal.fire('Éxito', `Reservación ${type}ada`, 'success');
+            loadReservations();
+          }
+        } catch (err) {
+          Swal.fire('Error', 'No se pudo actualizar', 'error');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

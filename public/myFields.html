@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Canchas - MiReserva Owner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="scripts/tailwind-config.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <div id="header-placeholder"></div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Left Side: Fields List -->
+            <div class="flex-grow">
+                <div class="flex items-center justify-between mb-8">
+                    <h1 class="text-3xl font-black text-slate-900">Mis Canchas</h1>
+                    <div class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest">
+                        Total: <span id="fieldsCount">0</span>
+                    </div>
+                </div>
+
+                <div id="fieldsList" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Fields will be loaded here -->
+                    <div class="animate-pulse bg-white h-48 rounded-3xl border border-slate-100"></div>
+                </div>
+            </div>
+
+            <!-- Right Side: Form -->
+            <div class="lg:w-[400px] shrink-0">
+                <div class="bg-white rounded-3xl shadow-card border border-slate-100 p-8 sticky top-24">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 id="formTitle" class="text-xl font-black text-slate-800">Agregar Cancha</h2>
+                        <button id="btnNewField" class="hidden text-emerald-600 hover:text-emerald-700 font-bold text-xs uppercase tracking-widest">
+                            <i class="fas fa-plus-circle mr-1"></i> Nueva
+                        </button>
+                    </div>
+
+                    <form id="fieldForm" class="space-y-4">
+                        <input type="hidden" id="fieldId" name="id">
+                        
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Nombre</label>
+                            <input type="text" id="fieldName" name="name" required placeholder="Ej: Cancha Central"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Tipo</label>
+                            <select id="fieldType" name="type" required
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold appearance-none">
+                                <option value="Fútbol 5">Fútbol 5</option>
+                                <option value="Fútbol 7">Fútbol 7</option>
+                                <option value="Fútbol 11">Fútbol 11</option>
+                                <option value="Pádel">Pádel</option>
+                                <option value="Tenis">Tenis</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Precio/hr</label>
+                                <input type="number" id="fieldPrice" name="price_per_hour" required step="0.01"
+                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Teléfono</label>
+                                <input type="text" id="fieldPhone" name="contact_phone" required
+                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Dirección</label>
+                            <input type="text" id="fieldAddress" name="address" required
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Latitud</label>
+                                <input type="number" id="fieldLat" name="latitude" step="any"
+                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Longitud</label>
+                                <input type="number" id="fieldLng" name="longitude" step="any"
+                                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Descripción</label>
+                            <textarea id="fieldDescription" name="description" rows="2"
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm font-medium"></textarea>
+                        </div>
+
+                        <button type="submit" id="btnSubmit" 
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-emerald-50 transition-all active:scale-95 uppercase tracking-widest text-xs mt-2">
+                            Guardar Cancha
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="scripts/ui-components.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let currentFields = [];
+        let isEditing = false;
+
+        if (!token || localStorage.getItem('role') !== 'owner') {
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFields();
+
+            const form = document.getElementById('fieldForm');
+            const btnNewField = document.getElementById('btnNewField');
+
+            btnNewField.addEventListener('click', () => resetForm());
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                const id = data.id;
+                delete data.id;
+
+                const url = isEditing ? `/owner/update-field/${id}` : '/owner/add-field';
+                const method = isEditing ? 'PUT' : 'POST';
+
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: '¡Éxito!',
+                            text: isEditing ? 'Cancha actualizada correctamente' : 'Cancha agregada con éxito',
+                            icon: 'success',
+                            confirmButtonColor: '#10b981'
+                        });
+                        resetForm();
+                        loadFields();
+                    } else {
+                        const res = await response.json();
+                        Swal.fire('Error', res.error || 'No se pudo guardar', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', 'Ocurrió un error inesperado', 'error');
+                }
+            });
+        });
+
+        async function loadFields() {
+            const fieldsList = document.getElementById('fieldsList');
+            const fieldsCount = document.getElementById('fieldsCount');
+            
+            try {
+                const response = await fetch('/owner/fields', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                currentFields = data.fields || [];
+                fieldsCount.innerText = currentFields.length;
+
+                if (currentFields.length > 0) {
+                    fieldsList.innerHTML = currentFields.map(field => {
+                        const mapsUrl = field.latitude && field.longitude 
+                            ? `https://www.google.com/maps/search/?api=1&query=${field.latitude},${field.longitude}`
+                            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(field.address)}`;
+                        
+                        return `
+                        <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-card hover:shadow-card-hover transition-all cursor-pointer group" 
+                             onclick="editField('${field.id}')" id="card-${field.id}">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-800 group-hover:text-emerald-600 transition">${field.name}</h3>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">${field.type}</span>
+                                </div>
+                                <div class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-xl text-sm font-black">
+                                    $${field.price_per_hour}/hr
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-xs font-bold text-slate-500">
+                                    <i class="fas fa-map-marker-alt text-emerald-500 w-5"></i> ${field.address}
+                                </div>
+                                <div class="flex items-center text-xs font-bold text-slate-500">
+                                    <i class="fas fa-phone text-emerald-500 w-5"></i> ${field.contact_phone}
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+                                <a href="${mapsUrl}" target="_blank" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:underline" onclick="event.stopPropagation()">
+                                    <i class="fas fa-external-link-alt mr-1"></i> Ver en Mapa
+                                </a>
+                                <i class="fas fa-chevron-right text-slate-200 group-hover:text-emerald-300 transition"></i>
+                            </div>
+                        </div>
+                    `}).join('');
+                } else {
+                    fieldsList.innerHTML = `
+                        <div class="col-span-full bg-white p-12 rounded-3xl border border-dashed border-slate-200 text-center">
+                            <i class="fas fa-futbol text-slate-200 text-5xl mb-4"></i>
+                            <p class="text-slate-400 font-bold italic">No tienes canchas registradas todavía.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                fieldsList.innerHTML = '<p class="text-red-500 font-bold">Error al cargar canchas.</p>';
+            }
+        }
+
+        function editField(id) {
+            const field = currentFields.find(f => f.id == id);
+            if (!field) return;
+
+            isEditing = true;
+            document.getElementById('formTitle').innerText = 'Editar Cancha';
+            document.getElementById('btnSubmit').innerText = 'Actualizar Cancha';
+            document.getElementById('btnNewField').classList.remove('hidden');
+
+            document.getElementById('fieldId').value = field.id;
+            document.getElementById('fieldName').value = field.name;
+            document.getElementById('fieldType').value = field.type;
+            document.getElementById('fieldPrice').value = field.price_per_hour;
+            document.getElementById('fieldDescription').value = field.description || '';
+            document.getElementById('fieldAddress').value = field.address;
+            document.getElementById('fieldLat').value = field.latitude || '';
+            document.getElementById('fieldLng').value = field.longitude || '';
+            document.getElementById('fieldPhone').value = field.contact_phone;
+
+            document.querySelectorAll('[id^="card-"]').forEach(c => c.classList.remove('border-emerald-500', 'bg-emerald-50/30'));
+            const selectedCard = document.getElementById(`card-${id}`);
+            if (selectedCard) selectedCard.classList.add('border-emerald-500', 'bg-emerald-50/30');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            isEditing = false;
+            document.getElementById('formTitle').innerText = 'Agregar Cancha';
+            document.getElementById('btnSubmit').innerText = 'Guardar Cancha';
+            document.getElementById('btnNewField').classList.add('hidden');
+            document.getElementById('fieldForm').reset();
+            document.getElementById('fieldId').value = '';
+            document.querySelectorAll('[id^="card-"]').forEach(c => c.classList.remove('border-emerald-500', 'bg-emerald-50/30'));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+/* 
+  DESIGN SYSTEM - MIRESERVA
+  Theme: Soccer/Field Green
+*/
+
+:root {
+  /* Colors */
+  --primary: #10b981;        /* Emerald 500 - Green Field */
+  --primary-dark: #059669;   /* Emerald 600 */
+  --primary-light: #d1fae5;  /* Emerald 100 */
+  --secondary: #84cc16;      /* Lime 500 - Ball/Accent */
+  --accent: #f59e0b;         /* Amber 500 - Warnings/Highlight */
+  
+  /* Neutral Colors */
+  --bg-main: #f8fafc;        /* Slate 50 */
+  --bg-surface: #ffffff;
+  --text-main: #0f172a;      /* Slate 900 */
+  --text-muted: #64748b;     /* Slate 500 */
+  --border: #e2e8f0;         /* Slate 200 */
+
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Spacing */
+  --container-max: 1280px;
+  --section-padding: 2rem;
+  
+  /* Shadows & Radius */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+}
+
+/* Base resets or common utilities could go here */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-main);
+}
