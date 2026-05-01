@@ -3,18 +3,15 @@
  * Centralized components for the entire website.
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderHeader();
-    renderFooter();
-    highlightActiveLink();
-});
-
-// Global toggle function for mobile menu (Failsafe)
+// 1. Define Global Functions FIRST (Failsafe for early clicks)
 window.toggleMobileMenu = function() {
     const menu = document.getElementById('mobile-menu');
     const btnIcon = document.querySelector('#mobile-menu-button i');
     
-    if (!menu) return;
+    if (!menu) {
+        console.warn("Mobile menu element not found");
+        return;
+    }
 
     if (menu.classList.contains('hidden')) {
         menu.classList.remove('hidden');
@@ -31,10 +28,27 @@ window.toggleMobileMenu = function() {
     }
 };
 
+window.logout = function() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+};
+
+// 2. Initialize UI on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        renderHeader();
+        renderFooter();
+        highlightActiveLink();
+    } catch (err) {
+        console.error("UI Initialization failed:", err);
+    }
+});
+
 function renderHeader() {
     const headerPlaceholder = document.getElementById('header-placeholder');
     if (!headerPlaceholder) return;
 
+    // Use safe role detection
     const role = localStorage.getItem('role') || 'player';
     const isPlayer = role === 'player';
 
@@ -68,15 +82,15 @@ function renderHeader() {
 
                     <!-- Mobile Menu Button -->
                     <div class="md:hidden">
-                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-slate-600 p-3 hover:bg-slate-50 rounded-2xl transition-all active:scale-90">
-                            <i class="fas fa-bars text-2xl"></i>
+                        <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-slate-600 p-3 hover:bg-slate-50 rounded-2xl transition-all active:scale-90 border-none outline-none">
+                            <i class="fas fa-bars text-2xl pointer-events-none"></i>
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Mobile Menu Content -->
-            <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 shadow-xl">
+            <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-50 shadow-xl overflow-hidden transition-all">
                 <div class="px-4 py-6 space-y-2">
                     ${isPlayer ? `
                         <a href="playerHome.html" class="block px-6 py-4 text-sm font-black text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 rounded-2xl transition uppercase tracking-widest">Explorar Canchas</a>
@@ -116,7 +130,7 @@ function renderFooter() {
                     <a href="#" class="text-slate-400 hover:text-emerald-500 transition-all transform hover:scale-110"><i class="fab fa-facebook text-2xl"></i></a>
                     <a href="#" class="text-slate-400 hover:text-emerald-500 transition-all transform hover:scale-110"><i class="fab fa-whatsapp text-2xl"></i></a>
                 </div>
-                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4">&copy; ${year} MiReserva. Todos los derechos reservados.</p>
+                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4">&copy; ${year} MiReserva. Developed by CodRam Softres - Todos los derechos registrados.</p>
                 <div class="flex justify-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <a href="#" class="hover:text-slate-600 transition">Privacidad</a>
                     <a href="#" class="hover:text-slate-600 transition">Términos</a>
@@ -128,16 +142,14 @@ function renderFooter() {
 }
 
 function highlightActiveLink() {
-    const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
-    document.querySelectorAll('.nav-link').forEach(link => {
-        if (link.dataset.page === currentPage) {
-            link.classList.remove('text-slate-500');
-            link.classList.add('text-emerald-600', 'border-b-4', 'border-emerald-500', 'pb-1');
-        }
-    });
-}
-
-function logout() {
-    localStorage.clear();
-    window.location.href = 'login.html';
+    try {
+        const path = window.location.pathname.split('/').pop().replace('.html', '');
+        const currentPage = path || 'index';
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.dataset.page === currentPage) {
+                link.classList.remove('text-slate-500');
+                link.classList.add('text-emerald-600', 'border-b-4', 'border-emerald-500', 'pb-1');
+            }
+        });
+    } catch (e) {}
 }

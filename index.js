@@ -10,11 +10,11 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline'; " +
-    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
+    "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; " +
+    "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
     "img-src 'self' data:; " +
-    "connect-src 'self' http://localhost:3001 http://69.169.102.33:3001 http://mi-reserva.pro https://mi-reserva.pro; " + 
-    "font-src 'self' https://cdnjs.cloudflare.com; " +
+    "connect-src 'self' http://localhost:3001 http://69.169.102.33:3001 http://mi-reserva.pro https://mi-reserva.pro https://cdn.tailwindcss.com; " + 
+    "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
     "object-src 'none'"
   );
   next();
