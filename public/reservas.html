@@ -154,23 +154,14 @@
                                 class="text-red-500 hover:text-white hover:bg-red-500 font-black text-[10px] uppercase tracking-widest transition-all flex items-center px-5 py-3 rounded-2xl border border-red-50 active:scale-95 shadow-sm">
                                 <i class="fas fa-times-circle mr-2"></i> Cancelar
                             </button>
-                        ` : (res.status !== 'cancelada' && !isUpcoming ? `
-                            <button onclick="rebook('${res.field_id}')" 
-                                class="text-emerald-600 hover:text-white hover:bg-emerald-600 font-black text-[10px] uppercase tracking-widest transition-all flex items-center px-5 py-3 rounded-2xl border border-emerald-50 active:scale-95 shadow-sm">
-                                <i class="fas fa-redo mr-2"></i> Reservar de nuevo
-                            </button>
-                        ` : '')}
+                        ` : ''}
                     </div>
-                </div>
-            `;
-            return div;
-        }
+                    </div>
+                    `;
+                    return div;
+                    }
 
-        function rebook(fieldId) {
-            window.location.href = `fieldDetail.html?id=${fieldId}`;
-        }
-
-        async function cancelReservation(id) {
+                    async function cancelReservation(id) {
             const result = await Swal.fire({
                 title: '¿Cancelar reserva?',
                 text: "Esta acción no se puede deshacer.",
