@@ -130,7 +130,7 @@ function renderFooter() {
                     <a href="#" class="text-slate-400 hover:text-emerald-500 transition-all transform hover:scale-110"><i class="fab fa-facebook text-2xl"></i></a>
                     <a href="#" class="text-slate-400 hover:text-emerald-500 transition-all transform hover:scale-110"><i class="fab fa-whatsapp text-2xl"></i></a>
                 </div>
-                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4">&copy; ${year} MiReserva. Developed by CodRam Softres - Todos los derechos registrados.</p>
+                <p class="text-slate-400 font-bold text-xs uppercase tracking-widest mb-4">© ${year} CodRam™ - Software. Todos los derechos reservados.</p>
                 <div class="flex justify-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                     <a href="#" class="hover:text-slate-600 transition">Privacidad</a>
                     <a href="#" class="hover:text-slate-600 transition">Términos</a>
